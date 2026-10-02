@@ -2,7 +2,7 @@
 
 1. Points AI Toolkit at /workspace/aitk (datasets, LoRAs). No Hugging Face token needed (optional HF_TOKEN is passed on).
 2. A dataset .zip dropped in datasets/ (e.g. straight from the Dataset Maker) is unzipped into its own folder.
-3. Every dataset gets a ready Krea 2 job with our settings. The trigger word is read from the captions
+3. (Only with AIEMPIRE_AUTOJOB=1) every dataset gets a ready Krea 2 job with our settings. The trigger word is read from the captions
    ("zvx woman, close-up selfie, ..." -> "zvx woman"). The student only presses Start.
 4. Krea 2 Raw (open Comfy-Org repack, no token) is downloaded in the background so training starts sooner.
 """
@@ -285,7 +285,8 @@ def main():
     while True:
         try:
             unpack_zips(sizes)
-            make_jobs()
+            if os.environ.get("AIEMPIRE_AUTOJOB") == "1":  # off by default: students set up the job themselves
+                make_jobs()
         except Exception as e:
             log("helper error:", e)
         time.sleep(float(os.environ.get("AIEMPIRE_POLL", "10")))
