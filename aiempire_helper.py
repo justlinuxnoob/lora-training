@@ -133,7 +133,27 @@ def read_trigger(folder):
     return None
 
 
+def gpu_vram_gb():
+    """VRAM of GPU 0 in GB (0 if unknown)."""
+    try:
+        import subprocess
+        out = subprocess.run(["nvidia-smi", "--query-gpu=memory.total", "--format=csv,noheader,nounits"],
+                             capture_output=True, text=True, timeout=20).stdout.split()
+        return int(out[0]) / 1024 if out else 0
+    except Exception:
+        return 0
+
+
+def memory_settings():
+    """Full quality on 80 GB+ cards; on 32-48 GB cards (RTX 5090, L40S, A6000 ...) Krea 2 only fits quantized."""
+    vram = gpu_vram_gb()
+    if os.environ.get("AIEMPIRE_QUANTIZE") == "1" or (0 < vram < 70):
+        return {"quantize": True, "quantize_te": True, "low_vram": True}, vram
+    return {"quantize": False, "quantize_te": False, "low_vram": False}, vram
+
+
 def job_config(name, folder, trigger):
+    mem, _ = memory_settings()
     return {
         "job": "extension",
         "config": {
@@ -177,8 +197,9 @@ def job_config(name, folder, trigger):
                 "logging": {"log_every": 1, "use_ui_logger": True},
                 "model": {
                     "name_or_path": MODEL, "arch": "krea2",
-                    "quantize": False, "qtype": "qfloat8", "quantize_te": False, "qtype_te": "qfloat8",
-                    "low_vram": False, "layer_offloading": False,
+                    "quantize": mem["quantize"], "qtype": "qfloat8",
+                    "quantize_te": mem["quantize_te"], "qtype_te": "qfloat8",
+                    "low_vram": mem["low_vram"], "layer_offloading": False,
                     "model_kwargs": {}, "compile": False,
                 },
                 "sample": {
@@ -220,7 +241,10 @@ def make_jobs():
         existing.add(name)
         with open(os.path.join(folder, MARK), "w") as f:
             f.write(name)
-        log(f"🏋️ job '{name}' ready (trigger word: {trigger or 'none found, captions used as they are'}) -> press Start")
+        mem, vram = memory_settings()
+        mode = "full quality (no quantization)" if not mem["quantize"] else "quantized fp8 + Low VRAM (fits 32-48 GB cards)"
+        log(f"🏋️ job '{name}' ready (trigger word: {trigger or 'none found, captions used as they are'}) · "
+            f"GPU {vram:.0f} GB -> {mode} -> press Start")
 
 
 # ---------------------------------------------------------------- model pre-download

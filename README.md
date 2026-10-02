@@ -30,7 +30,7 @@ Optional template env vars: `AIEMPIRE_STEPS` (default 3000), `AIEMPIRE_RANK` (de
 
 Share it as `https://console.runpod.io/deploy?template=<TEMPLATE_ID>&ref=9s65jq8z`.
 
-GPU: **RTX PRO 6000 (96 GB)** or **H100 / A100 80 GB**. On 48 GB cards, turn quantization on in the job first.
+GPU: **RTX PRO 6000 (96 GB)** or **H100 / A100 80 GB** = full quality. **RTX 5090 (32 GB)** and 48 GB cards work too: the job switches to quantized fp8 + Low VRAM by itself (slightly lower quality, slower). Force it with env `AIEMPIRE_QUANTIZE=1`.
 The image uses CUDA 13 wheels, so the host needs a recent driver. If the pod log says the CUDA driver is too old, deploy again with the CUDA version filter set to 13.0.
 
 ## Student steps
