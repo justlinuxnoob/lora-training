@@ -24,6 +24,10 @@ RUN if [ ! -d /app/ai-toolkit/extensions_built_in/diffusion_models/krea2 ]; then
 
 RUN pip install --no-cache-dir --break-system-packages jupyterlab
 
+# no Hugging Face token: hand-made Krea 2 jobs (krea/Krea-2-Raw, gated) load the open Comfy-Org repack
+COPY patch_krea.py /tmp/patch_krea.py
+RUN python3 /tmp/patch_krea.py && rm /tmp/patch_krea.py
+
 COPY aiempire_helper.py /opt/aiempire/aiempire_helper.py
 COPY start.sh /aiempire_start.sh
 RUN chmod +x /aiempire_start.sh
