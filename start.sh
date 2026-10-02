@@ -22,11 +22,6 @@ nohup jupyter lab --allow-root --no-browser --ip=0.0.0.0 --port=8888 \
   --FileContentsManager.delete_to_trash=False \
   > "$WS/jupyter.log" 2>&1 &
 
-if [ -z "${HF_TOKEN:-}" ]; then
-  echo "[AI Empire] ⚠ No HF_TOKEN set. Krea 2 Raw needs one: huggingface.co/krea/Krea-2-Raw -> Agree,"
-  echo "             then huggingface.co/settings/tokens -> Read token -> paste it in AI Toolkit -> Settings."
-fi
-
 # our helper: settings, zip unpacking, one Krea 2 job per dataset, model pre-download
 nohup python3 /opt/aiempire/aiempire_helper.py > "$WS/aiempire.log" 2>&1 &
 

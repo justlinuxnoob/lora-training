@@ -1,10 +1,10 @@
 """AI Empire · LoRA Trainer helper (runs next to the AI Toolkit UI).
 
-1. Points AI Toolkit at /workspace/aitk (datasets, LoRAs) and copies HF_TOKEN into its settings.
+1. Points AI Toolkit at /workspace/aitk (datasets, LoRAs). No Hugging Face token needed (optional HF_TOKEN is passed on).
 2. A dataset .zip dropped in datasets/ (e.g. straight from the Dataset Maker) is unzipped into its own folder.
 3. Every dataset gets a ready Krea 2 job with our settings. The trigger word is read from the captions
    ("zvx woman, close-up selfie, ..." -> "zvx woman"). The student only presses Start.
-4. Once a Hugging Face token is known, Krea 2 Raw is downloaded in the background so training starts sooner.
+4. Krea 2 Raw (open Comfy-Org repack, no token) is downloaded in the background so training starts sooner.
 """
 import json
 import os
@@ -23,7 +23,10 @@ MARK = ".aiempire_job"
 IMG_EXT = (".jpg", ".jpeg", ".png", ".webp")
 
 # ---- our Krea 2 character-LoRA settings (Raw, rank 64, sigmoid, 1024, no quantization; checkpoint every 250 steps) ----
-MODEL = "krea/Krea-2-Raw"
+# Krea 2 Raw from Comfy-Org's open repack (same weights, no Hugging Face login/token needed).
+# AI Toolkit reads ComfyUI repacks directly; text encoder (Qwen3-VL-4B) and VAE (Qwen-Image) are open too.
+MODEL = os.environ.get("AIEMPIRE_MODEL", "Comfy-Org/Krea-2")
+MODEL_FILE = os.environ.get("AIEMPIRE_MODEL_FILE", "diffusion_models/krea2_raw_bf16.safetensors")
 STEPS = int(os.environ.get("AIEMPIRE_STEPS", "3000"))
 RANK = int(os.environ.get("AIEMPIRE_RANK", "64"))
 SAMPLE_PROMPTS = [
@@ -71,7 +74,7 @@ def setup_settings():
     }
     if any(s.get(k) != v for k, v in want.items()):
         api("/api/settings", want)
-        log("settings: datasets ->", DATASETS, "| LoRAs ->", OUTPUT, "| HF token", "set" if token else "NOT set")
+        log("settings: datasets ->", DATASETS, "| LoRAs ->", OUTPUT)
 
 
 def current_token():
@@ -200,7 +203,7 @@ def job_config(name, folder, trigger):
                     "quantize": mem["quantize"], "qtype": "qfloat8",
                     "quantize_te": mem["quantize_te"], "qtype_te": "qfloat8",
                     "low_vram": mem["low_vram"], "layer_offloading": False,
-                    "model_kwargs": {}, "compile": False,
+                    "model_kwargs": {"checkpoint_filename": MODEL_FILE}, "compile": False,
                 },
                 "sample": {
                     "sampler": "flowmatch", "sample_every": 500, "sample_start_step": 0,
@@ -249,29 +252,21 @@ def make_jobs():
 
 # ---------------------------------------------------------------- model pre-download
 def predownload():
-    started = False
-    while not started:
-        token = current_token()
-        if not token:
-            time.sleep(20)
-            continue
-        started = True
+    """Download Krea 2 Raw + Qwen3-VL + VAE in the background (first boot only), so Start is quick."""
+    token = os.environ.get("HF_TOKEN", "").strip() or None
+    for attempt in range(1, 4):
         try:
             import huggingface_hub as hh
-            log("⬇️ downloading Krea 2 Raw + Qwen3-VL in the background (first time only, ~35 GB)")
-            hh.hf_hub_download(MODEL, "raw.safetensors", token=token)
+            log("⬇️ downloading Krea 2 Raw (26 GB) + Qwen3-VL + VAE in the background (first boot only)")
+            hh.hf_hub_download(MODEL, MODEL_FILE, token=token)
             hh.snapshot_download("Qwen/Qwen3-VL-4B-Instruct", token=token)
             hh.snapshot_download("Qwen/Qwen-Image", allow_patterns=["vae/*"], token=token)
-            log("✅ models downloaded")
+            log("✅ models downloaded, training starts straight away")
+            return
         except Exception as e:
-            msg = str(e)
-            if "401" in msg or "403" in msg or "gated" in msg.lower() or "GatedRepo" in type(e).__name__:
-                log("🛑 Hugging Face refused the download. Open huggingface.co/krea/Krea-2-Raw, click Agree,"
-                    " and use a token with Read access (AI Toolkit -> Settings).")
-                started = False
-                time.sleep(60)
-            else:
-                log("download will happen when training starts instead:", msg[:300])
+            log(f"download try {attempt} failed: {str(e)[:300]}")
+            time.sleep(30)
+    log("models will download when training starts instead")
 
 
 def main():
