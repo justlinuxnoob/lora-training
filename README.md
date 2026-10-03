@@ -2,7 +2,7 @@
 
 A RunPod template for training a Krea 2 character LoRA with AI Toolkit (Ostris). Deploy it, drop your dataset `.zip` in, set up the job in the AI Toolkit UI and press Start. You rent the GPU by the hour, and you don't need a Hugging Face account or token.
 
-**Deploy:** https://console.runpod.io/deploy?template=2zexf8lq3z&ref=9s65jq8z
+**Ready-made RunPod template:** included in AI Empire Premium on Skool (https://www.skool.com/aiempire), with the full video walkthrough. You can also build your own from this repo (see "Make your own copy of the template" below).
 
 Image: `ghcr.io/justlinuxnoob/lora-training:latest`. GitHub Actions rebuilds it on every code push and every Monday, always from the newest official `ostris/aitoolkit:latest`.
 
@@ -28,7 +28,7 @@ You set up the training job yourself in AI Toolkit. Nothing is made for you unle
 | 48 GB cards (L40S, A6000) | 48 GB | Turn on fp8 quantization (transformer and text encoder) and **Low VRAM** in the job. |
 | RTX 5090 | 32 GB | Same: fp8 quantization and **Low VRAM**. |
 
-On 32-48 GB cards Krea 2 only fits quantized. It works, but quality is slightly lower and training is slower.
+**For course quality, use the RTX PRO 6000 (96 GB)** with quantization, Low VRAM and layer offloading all off. A 3,000-step run takes about 2 to 3 hours. On 32-48 GB cards Krea 2 only fits quantized with Low VRAM on, and that gives a worse LoRA.
 
 The image uses CUDA 13 wheels, so the host needs a recent driver. See troubleshooting if the log says the driver is too old.
 
