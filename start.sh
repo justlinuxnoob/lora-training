@@ -22,7 +22,8 @@ nohup jupyter lab --allow-root --no-browser --ip=0.0.0.0 --port=8888 \
   --FileContentsManager.delete_to_trash=False \
   > "$WS/jupyter.log" 2>&1 &
 
-# our helper: settings, zip unpacking, one Krea 2 job per dataset, model pre-download
+# our helper: settings, zip unpacking, model pre-download
+# (jobs are made by hand in the UI; one Krea 2 job per dataset only with AIEMPIRE_AUTOJOB=1)
 nohup python3 /opt/aiempire/aiempire_helper.py > "$WS/aiempire.log" 2>&1 &
 
 echo "[AI Empire] ✅ AI Toolkit on port 8675 · JupyterLab on port 8888"

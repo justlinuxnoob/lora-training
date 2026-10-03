@@ -2,7 +2,8 @@
 # The official AI Toolkit image (ostris/aitoolkit) + our helper:
 #   - everything lives on /workspace (datasets, LoRAs, job list, model downloads)
 #   - drop a dataset .zip from the Dataset Maker -> it unzips itself
-#   - a Krea 2 job with our settings is created for every dataset (trigger word read from the captions)
+#   - jobs are made by hand in the AI Toolkit UI by default; only with AIEMPIRE_AUTOJOB=1 does every
+#     dataset get a Krea 2 job with our settings (trigger word read from the captions)
 #   - JupyterLab on 8888 for easy upload/download
 # Built on the official image on purpose: RunPod hosts usually have its layers cached, so pods start fast.
 FROM ostris/aitoolkit:latest
