@@ -24,7 +24,7 @@ You set up the training job yourself in AI Toolkit. Nothing is made for you unle
 | GPU | VRAM | What to do |
 |---|---|---|
 | RTX PRO 6000 | 96 GB | Full quality. Leave quantization off. |
-| H100 or A100 80 GB | 80 GB | Full quality. Leave quantization off. |
+| H100 or A100 80 GB | 80 GB | Fits with quantization off, but the course trains on the RTX PRO 6000. |
 | 48 GB cards (L40S, A6000) | 48 GB | Turn on fp8 quantization (transformer and text encoder) and **Low VRAM** in the job. |
 | RTX 5090 | 32 GB | Same: fp8 quantization and **Low VRAM**. |
 
@@ -49,7 +49,7 @@ With Max Step Saves to Keep at 4, older saves get deleted as training goes on. Y
 ## How to train a character LoRA on RunPod, step by step
 
 1. Open the deploy link, pick a GPU, optionally set the two passwords (`AI_TOOLKIT_AUTH`, `JUPYTER_PASSWORD`), then Deploy.
-2. Open port **8888** (JupyterLab). Drag your dataset `.zip` into `datasets/`. Wait a few seconds: it unzips into `datasets/<zip name>/`. You can also upload through AI Toolkit → Datasets.
+2. Open AI Toolkit (port **8675**) → **New Dataset** → drag in the photos and `.txt` captions from your unzipped dataset folder. (Or drop the `.zip` into `datasets/` in JupyterLab on port 8888: it unzips into `datasets/<zip name>/` by itself.)
 3. Open port **8675** (AI Toolkit) → New Job. Pick Krea 2, pick your dataset, and set the fields from the table above.
 4. Create the job and press **Start**. Watch the sample images as they come in.
 5. When it's done, download the LoRA from `output/<job>/` (in JupyterLab or on the job page).
@@ -61,9 +61,9 @@ Training saves `<job>_000000250.safetensors`, `<job>_000000500.safetensors` and 
 
 Train on **Raw**, test on **Turbo** (or our Krea 2 workflow):
 
-1. Load each checkpoint: 1500, 2000, 2500 and the final one.
-2. Use the same 3 prompts and the same seed for all of them.
-3. Set LoRA strength between 0.8 and 1.0.
+1. Download 3 files: the final one (3000 steps, no number in the name), 2500 and 2000.
+2. Run the same prompt with the same fixed seed on each, LoRA strength 0.9.
+3. Keep the best one. The final file isn't always it: too many steps can make the face look plastic.
 
 Too early: the face isn't quite her yet. Too late: the same background, outfit or expression creeps into every image, and skin looks plastic. Pick the last checkpoint before that starts.
 
